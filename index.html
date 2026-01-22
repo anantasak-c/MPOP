@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>บ้านรวมทะเล - Baan Ruam Talay</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> <style>
+        :root {
+            --primary: #004d61;
+            --accent: #ff8c00;
+            --bg: #f0f4f8;
+            --line-color: #06C755;
+            --fb-color: #0084ff;
+        }
+
+        body { font-family: 'Sarabun', sans-serif; background-color: var(--bg); margin: 0; padding: 0; color: #333; -webkit-tap-highlight-color: transparent; padding-bottom: 80px; }
+        
+        /* --- Styles เดิมของคุณ (คงไว้) --- */
+        header { background-color: white; padding: 10px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 90; }
+        .logo-img { height: 60px; border-radius: 50%; border: 2px solid var(--primary); }
+        h1 { margin: 5px 0 0; color: var(--primary); font-size: 1.2rem; }
+        .subtitle { color: #666; font-size: 0.8rem; }
+        .container { max-width: 1200px; margin: 15px auto; padding: 0 10px; }
+        .section-header { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #eee; color: var(--primary); }
+        .section-header i { font-size: 1.2rem; color: var(--accent); }
+        .section-header h2 { margin: 0; font-size: 1.1rem; }
+        .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; margin-bottom: 40px; } /* ปรับขนาดเล็กน้อย */
+        .product-card { background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); display: flex; flex-direction: column; transition: transform 0.2s; }
+        .product-img { width: 100%; height: 150px; object-fit: cover; border-bottom: 1px solid #eee; }
+        .product-info { padding: 10px; display: flex; flex-direction: column; flex-grow: 1; }
+        .badge { align-self: flex-start; background-color: #e3f2fd; color: var(--primary); padding: 2px 8px; border-radius: 15px; font-size: 0.75rem; font-weight: 600; margin-bottom: 5px; }
+        .product-name { font-size: 1rem; font-weight: 800; color: var(--primary); margin-bottom: 2px; line-height: 1.2; height: 2.4em; overflow: hidden; }
+        .choice-container { background-color: #f9f9f9; border: 1px solid #eee; border-radius: 8px; padding: 5px; margin: 10px 0; }
+        .choice-row { display: flex; align-items: center; justify-content: space-between; padding: 4px 0; cursor: pointer; }
+        .choice-label { display: flex; align-items: center; gap: 5px; font-size: 0.85rem; color: #333; cursor: pointer; flex-grow: 1; }
+        .choice-price { font-weight: bold; color: #d32f2f; font-size: 0.9rem; }
+        input[type="radio"] { accent-color: var(--primary); }
+        
+        /* ปุ่มสั่งซื้อแบบใหม่ */
+        .btn-add-cart {
+            background-color: var(--primary); color: white; border: none; padding: 8px; width: 100%;
+            border-radius: 6px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px;
+            margin-top: auto; font-family: 'Sarabun';
+        }
+        .btn-add-cart:active { transform: scale(0.98); }
+
+        /* Floating Cart Bar */
+        .cart-bar {
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            width: 90%; max-width: 400px; background-color: #333; color: white;
+            border-radius: 50px; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3); z-index: 100; cursor: pointer;
+            visibility: hidden; opacity: 0; transition: 0.3s;
+        }
+        .cart-bar.show { visibility: visible; opacity: 1; bottom: 20px; }
+        .cart-info { display: flex; flex-direction: column; }
+        .cart-total-qty { font-size: 0.8rem; color: #ccc; }
+        .cart-total-price { font-weight: bold; font-size: 1.1rem; }
+        .btn-view-cart { background: white; color: #333; padding: 5px 15px; border-radius: 20px; font-weight: bold; font-size: 0.9rem; border:none;}
+
+        /* Modals */
+        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); align-items: center; justify-content: center; }
+        .modal-content { background-color: #fff; margin: 15px; border-radius: 15px; width: 100%; max-width: 450px; max-height: 90vh; overflow-y: auto; position: relative; animation: slideUp 0.3s; }
+        @keyframes slideUp { from {transform: translateY(20px); opacity: 0;} to {transform: translateY(0); opacity: 1;} }
+        
+        .modal-header { padding: 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: white; z-index: 10; }
+        .modal-body { padding: 15px; }
+
+        /* Cart Items in Modal */
+        .cart-item { display: flex; justify-content: space-between; border-bottom: 1px dashed #eee; padding: 10px 0; }
+        .cart-item-name { font-weight: bold; color: var(--primary); font-size: 0.95rem; }
+        .cart-item-detail { font-size: 0.85rem; color: #666; }
+        .cart-item-price { color: var(--accent); font-weight: bold; }
+        .cart-remove { color: red; cursor: pointer; font-size: 0.9rem; margin-left: 10px; }
+
+        /* Form Styles */
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
+        .form-control { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-family: 'Sarabun'; box-sizing: border-box; }
+        .qr-section { text-align: center; margin: 15px 0; padding: 10px; background: #f0f4f8; border-radius: 10px; }
+        .qr-img { width: 200px; border-radius: 10px; mix-blend-mode: multiply;}
+        
+        .btn-confirm { background-color: var(--line-color); color: white; width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; }
+        .btn-confirm:disabled { background-color: #ccc; }
+
+        /* Loader */
+        .loader-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.8); z-index:3000; display:none; justify-content:center; align-items:center; flex-direction:column; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <img src="https://res.cloudinary.com/duei21aup/image/upload/v1768563237/557750264_122104833801039338_3650976487977952461_n_1_tdwert.jpg" alt="Logo" class="logo-img">
+        <h1>Baan Ruam Talay</h1>
+        <div class="subtitle">สั่งซื้อง่ายๆ อัปโหลดสลิปได้ทันที</div>
+    </header>
+
+    <div class="container">
+        <div class="section-header">
+            <i class="fas fa-utensils"></i>
+            <h2>เมนูสินค้า</h2>
+        </div>
+        
+        <div id="loading" style="text-align:center; padding:20px;"><i class="fas fa-spinner fa-spin"></i> กำลังโหลด...</div>
+        <div id="product-list" class="product-grid"></div>
+    </div>
+
+    <div class="cart-bar" id="cartBar" onclick="openCartModal()">
+        <div class="cart-info">
+            <span class="cart-total-qty" id="barQty">0 รายการ</span>
+            <span class="cart-total-price" id="barTotal">฿0</span>
+        </div>
+        <button class="btn-view-cart">ดูตะกร้า <i class="fas fa-chevron-right"></i></button>
+    </div>
+
+    <div id="cartModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>สรุปรายการสั่งซื้อ</h3>
+                <span style="font-size:24px; cursor:pointer;" onclick="closeModal('cartModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div id="cartItemsList"></div>
+                <div style="margin-top:15px; text-align:right; font-size:1.2rem; font-weight:bold; color:var(--primary);">
+                    รวมทั้งหมด: <span id="cartModalTotal">฿0</span>
+                </div>
+                <button class="btn-add-cart" style="margin-top:20px; font-size:1rem;" onclick="openPaymentModal()">
+                    ไปหน้าชำระเงิน
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="paymentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>ชำระเงิน & แจ้งโอน</h3>
+                <span style="font-size:24px; cursor:pointer;" onclick="closeModal('paymentModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>ชื่อลูกค้า / เบอร์โทร</label>
+                    <input type="text" id="custName" class="form-control" placeholder="เช่น คุณสมชาย 081-xxx-xxxx">
+                </div>
+
+                <div class="qr-section">
+                    <p style="margin:0; font-weight:bold;">สแกนเพื่อชำระเงิน</p>
+                    <img src="https://via.placeholder.com/200?text=YOUR+QR+CODE" alt="QR Code" class="qr-img">
+                    <div id="payTotalDisplay" style="color:var(--accent); font-weight:bold; font-size:1.2rem; margin-top:5px;">฿0</div>
+                </div>
+
+                <div class="form-group">
+                    <label>แนบสลิปการโอน</label>
+                    <input type="file" id="slipFile" class="form-control" accept="image/*">
+                </div>
+
+                <button class="btn-confirm" onclick="submitOrder()">ยืนยันแจ้งโอนเงิน</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="loader-overlay" id="submitLoader">
+        <i class="fas fa-spinner fa-spin fa-3x" style="color:var(--primary);"></i>
+        <p style="margin-top:10px;">กำลังส่งข้อมูล...</p>
+    </div>
+
+    <script>
+        // --- CONFIGURATION ---
+        // 1. URL ของ Google Apps Script (ที่ได้จากการ Deploy)
+        const GAS_URL = "YOUR_GAS_URL_HERE"; 
+        
+        // 2. URL Google Sheet Database (สินค้า)
+        const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSOdIbAGpnZGmc3RJ0R5lebcjOdy03fjboBZ_kdbjzCQkSCGBtEII57uUZ3Xidj9GVx3bvuxpMJy-o/pub?output=csv";
+
+        let products = [];
+        let cart = [];
+
+        // Load Data
+        window.onload = function() {
+            Papa.parse(SHEET_URL, {
+                download: true, header: true, skipEmptyLines: true,
+                complete: function(results) {
+                    products = results.data.filter(item => item.name && item.name.trim() !== "");
+                    document.getElementById('loading').style.display = 'none';
+                    renderProducts();
+                }
+            });
+        };
+
+        function renderProducts() {
+            const container = document.getElementById('product-list');
+            container.innerHTML = "";
+            products.forEach((p, i) => {
+                const img = (p.img && p.img.trim() !== "") ? p.img : "https://via.placeholder.com/150";
+                
+                // เช็คราคาว่ามีเศษทศนิยมไหม ถ้าไม่มีไม่ต้องโชว์ .00
+                const p_half = p.price_half ? parseInt(p.price_half) : 0;
+                const p_full = p.price_full ? parseInt(p.price_full) : 0;
+
+                container.innerHTML += `
+                    <div class="product-card">
+                        <img src="${img}" class="product-img">
+                        <div class="product-info">
+                            <div class="product-name">${p.name}</div>
+                            <div class="choice-container">
+                                <label class="choice-row">
+                                    <div class="choice-label">
+                                        <input type="radio" name="w-${i}" value="half" data-price="${p_half}"> 0.5kg
+                                    </div>
+                                    <div class="choice-price">฿${p_half}</div>
+                                </label>
+                                <label class="choice-row" style="border-bottom:none">
+                                    <div class="choice-label">
+                                        <input type="radio" name="w-${i}" value="full" data-price="${p_full}" checked> 1kg
+                                    </div>
+                                    <div class="choice-price">฿${p_full}</div>
+                                </label>
+                            </div>
+                            <button class="btn-add-cart" onclick="addToCart(${i})">
+                                <i class="fas fa-plus-circle"></i> ใส่ตะกร้า
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // --- Cart System ---
+        function addToCart(index) {
+            const p = products[index];
+            const radios = document.getElementsByName(`w-${index}`);
+            let selectedSize = 'full';
+            let price = 0;
+            
+            for (const r of radios) { 
+                if (r.checked) { 
+                    selectedSize = r.value; 
+                    price = parseInt(r.getAttribute('data-price'));
+                    break; 
+                } 
+            }
+
+            if (price === 0) return alert("สินค้าหมดหรือไม่มีราคา");
+
+            const sizeLabel = selectedSize === 'half' ? '0.5 kg' : '1 kg';
+            
+            // Check duplicate to stack items
+            const existing = cart.find(item => item.id === index && item.size === sizeLabel);
+            if (existing) {
+                existing.qty++;
+            } else {
+                cart.push({
+                    id: index,
+                    name: p.name,
+                    size: sizeLabel,
+                    price: price,
+                    qty: 1
+                });
+            }
+            
+            updateCartUI();
+            
+            // Effect
+            const btn = event.currentTarget;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check"></i> เรียบร้อย';
+            btn.style.backgroundColor = '#06C755';
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.style.backgroundColor = '';
+            }, 1000);
+        }
+
+        function updateCartUI() {
+            const totalQty = cart.reduce((sum, item) => sum + item.qty, 0);
+            const totalPrice = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+
+            document.getElementById('barQty').innerText = `${totalQty} รายการ`;
+            document.getElementById('barTotal').innerText = `฿${totalPrice.toLocaleString()}`;
+            document.getElementById('cartModalTotal').innerText = `฿${totalPrice.toLocaleString()}`;
+            document.getElementById('payTotalDisplay').innerText = `฿${totalPrice.toLocaleString()}`;
+
+            const bar = document.getElementById('cartBar');
+            if (totalQty > 0) bar.classList.add('show');
+            else bar.classList.remove('show');
+        }
+
+        function renderCartItems() {
+            const list = document.getElementById('cartItemsList');
+            list.innerHTML = "";
+            if(cart.length === 0) {
+                list.innerHTML = "<p style='text-align:center'>ไม่มีสินค้าในตะกร้า</p>";
+                return;
+            }
+            cart.forEach((item, idx) => {
+                list.innerHTML += `
+                    <div class="cart-item">
+                        <div>
+                            <div class="cart-item-name">${item.name} <span style="font-weight:normal; font-size:0.8rem">(${item.size})</span></div>
+                            <div class="cart-item-detail">฿${item.price} x ${item.qty}</div>
+                        </div>
+                        <div>
+                            <span class="cart-item-price">฿${item.price * item.qty}</span>
+                            <span class="cart-remove" onclick="removeFromCart(${idx})"><i class="fas fa-trash"></i></span>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function removeFromCart(idx) {
+            cart.splice(idx, 1);
+            updateCartUI();
+            renderCartItems();
+            if(cart.length === 0) closeModal('cartModal');
+        }
+
+        // --- Modals ---
+        function openCartModal() {
+            renderCartItems();
+            document.getElementById('cartModal').style.display = 'flex';
+        }
+        function openPaymentModal() {
+            closeModal('cartModal');
+            document.getElementById('paymentModal').style.display = 'flex';
+        }
+        function closeModal(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+
+        // --- SUBMIT ORDER (หัวใจสำคัญ) ---
+        async function submitOrder() {
+            const name = document.getElementById('custName').value;
+            const fileInput = document.getElementById('slipFile');
+            
+            if (!name) return Swal.fire('แจ้งเตือน', 'กรุณาระบุชื่อหรือเบอร์ติดต่อ', 'warning');
+            if (cart.length === 0) return Swal.fire('แจ้งเตือน', 'ไม่มีสินค้าในตะกร้า', 'warning');
+            if (fileInput.files.length === 0) return Swal.fire('แจ้งเตือน', 'กรุณาแนบสลิปการโอน', 'warning');
+
+            // Show Loader
+            document.getElementById('submitLoader').style.display = 'flex';
+
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+
+            reader.onload = async function(e) {
+                const base64 = e.target.result.split(',')[1]; // เอาแค่ data
+                
+                // เตรียมข้อมูลส่ง
+                const orderItems = cart.map(c => `${c.name}(${c.size}) x${c.qty}`).join(", ");
+                const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+
+                const payload = {
+                    name: name,
+                    items: orderItems,
+                    total: total,
+                    slipBase64: base64,
+                    mimeType: file.type
+                };
+
+                try {
+                    const response = await fetch(GAS_URL, {
+                        method: 'POST',
+                        body: JSON.stringify(payload)
+                    });
+                    
+                    const res = await response.json();
+                    
+                    document.getElementById('submitLoader').style.display = 'none';
+                    
+                    if (res.result === 'success') {
+                        Swal.fire({
+                            title: 'สั่งซื้อสำเร็จ!',
+                            text: 'เราได้รับออเดอร์และสลิปเรียบร้อยแล้ว',
+                            icon: 'success'
+                        }).then(() => {
+                            location.reload(); // รีเฟรชหน้าเว็บ
+                        });
+                    } else {
+                        throw new Error(res.msg);
+                    }
+                } catch (error) {
+                    document.getElementById('submitLoader').style.display = 'none';
+                    Swal.fire('เกิดข้อผิดพลาด', 'ไม่สามารถส่งข้อมูลได้: ' + error.message, 'error');
+                }
+            };
+            
+            reader.readAsDataURL(file);
+        }
+    </script>
+</body>
+</html>
